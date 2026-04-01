@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 *.pkl
 *.csv
+!data/fraud_sample.csv
 .env
 
 data/archive/
