@@ -8,44 +8,29 @@ from model import train_model, predict
 st.set_page_config(page_title="Fraud Detection System", layout="centered")
 
 # =========================
-# CUSTOM CSS (🔥 CLAVE)
+# CUSTOM CSS
 # =========================
 st.markdown("""
 <style>
 
-/* =========================
-GLOBAL FIX
-========================= */
 html, body, [class*="css"]  {
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* =========================
-FIX HEADER CUT (🔥 CLAVE)
-========================= */
 section.main > div {
     padding-top: 3rem;
 }
 
-/* =========================
-CONTAINER SPACING
-========================= */
 .block-container {
     padding-top: 3rem;
     padding-bottom: 2rem;
 }
 
-/* =========================
-HEADINGS
-========================= */
 h1, h2, h3 {
     font-weight: 600;
     letter-spacing: 0.3px;
 }
 
-/* =========================
-BUTTON
-========================= */
 .stButton>button {
     border-radius: 8px;
     background-color: #1f77b4;
@@ -58,32 +43,27 @@ BUTTON
     background-color: #155a8a;
 }
 
-/* =========================
-METRICS
-========================= */
 [data-testid="stMetricValue"] {
     font-size: 28px;
     font-weight: 600;
 }
 
-/* =========================
-SMOOTH RENDER
-========================= */
 body {
     overflow-x: hidden;
 }
 
 </style>
 """, unsafe_allow_html=True)
+
 # =========================
 # LOAD MODEL
 # =========================
 @st.cache_resource
 def load_model():
-    model, X_test, y_test = train_model()
-    return model, X_test
+    model, X_test, scaler = train_model()
+    return model, X_test, scaler
 
-model, X_test = load_model()
+model, X_test, scaler = load_model()
 
 # =========================
 # HEADER
@@ -101,17 +81,35 @@ st.markdown("### Transaction Input")
 col1, col2 = st.columns(2)
 
 with col1:
-    amount = st.number_input("Transaction Amount ($)", 0.0, 50000.0, 100.0)
+    amount = st.number_input(
+        "Transaction Amount ($)", 
+        min_value=0.0, 
+        max_value=50000.0, 
+        value=100.0,
+        key="amount_input"
+    )
 
 with col2:
-    time = st.slider("Time (seconds)", 0, 172800, 10000)
+    time = st.slider(
+        "Time (seconds)", 
+        min_value=0, 
+        max_value=172800, 
+        value=10000,
+        key="time_slider"
+    )
 
 # =========================
 # SETTINGS
 # =========================
 st.markdown("### Detection Settings")
 
-threshold = st.slider("Fraud Threshold", 0.0, 1.0, 0.5)
+threshold = st.slider(
+    "Fraud Threshold", 
+    min_value=0.0, 
+    max_value=1.0, 
+    value=0.5,
+    key="threshold_slider"
+)
 
 # =========================
 # BASE SAMPLE

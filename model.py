@@ -3,58 +3,76 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, roc_auc_score
 
-# =========================
-# LOAD DATA
-# =========================
-def load_data():
-    df = pd.read_csv("data/fraud.csv")
+#  GLOBAL (clave para producción)
+model_input_columns = None
 
-    X = df.drop("Class", axis=1)
-    y = df["Class"]
-
-    return X, y
 
 # =========================
 # TRAIN MODEL
 # =========================
 def train_model():
-    X, y = load_data()
+    global model_input_columns
 
-    print("Class distribution:")
-    print(y.value_counts())
+    #  cargar dataset (sample para producción)
+    df = pd.read_csv("data/fraud_sample.csv")
 
+    #  target
+    y = df["Class"]
+    X = df.drop("Class", axis=1)
+
+    #  guardar columnas (CLAVE)
+    model_input_columns = X.columns.tolist()
+
+    # split
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=0.2, stratify=y, random_state=42
     )
 
+    # modelo
     model = RandomForestClassifier(
         n_estimators=100,
-        max_depth=8,
-        class_weight="balanced",
-        random_state=42
+        random_state=42,
+        class_weight="balanced"
     )
 
     model.fit(X_train, y_train)
 
+    # =========================
+    # METRICS (para consola)
+    # =========================
     y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1]
+    y_prob = model.predict_proba(X_test)[:, 1]
 
-    print("\n📊 Classification Report:")
+    print("\n Classification Report:")
     print(classification_report(y_test, y_pred))
 
-    auc = roc_auc_score(y_test, y_proba)
-    print(f"\n🔥 ROC AUC: {auc:.4f}")
+    roc = roc_auc_score(y_test, y_prob)
+    print(f"\n ROC AUC: {roc:.4f}")
 
     return model, X_test, y_test
+
 
 # =========================
 # PREDICT
 # =========================
 def predict(model, input_data):
+    global model_input_columns
+
+    # convertir input a DataFrame
     df = pd.DataFrame([input_data])
 
+    #  asegurar columnas correctas
+    for col in model_input_columns:
+        if col not in df.columns:
+            df[col] = 0
+
+    #  ordenar columnas
+    df = df[model_input_columns]
+
+    # predicción
     prob = model.predict_proba(df)[0][1]
 
     return {
-        "probability": float(prob)
+        "probability": prob,
+        "prediction": int(prob > 0.5)
     }
