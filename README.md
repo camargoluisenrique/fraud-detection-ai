@@ -74,5 +74,5 @@ streamlit run app.py
 
 👨‍💻 Author
 
-Luis Enrique Camargo Rangel
+Luis Enrique Camargo Rangel     
 Data Scientist | Machine Learning Engineer
