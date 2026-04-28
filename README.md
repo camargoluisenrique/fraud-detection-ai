@@ -1,4 +1,4 @@
-# 🛡️ Fraud Detection System (AI)
+# Fraud Detection System (AI)
 
 An end-to-end machine learning system designed to detect fraudulent financial transactions in real time.
 
@@ -6,13 +6,13 @@ This project simulates a production-ready fraud detection pipeline used in finte
 
 ---
 
-## 🚀 Live Demo
+## Live Demo
 
-👉 https://fraud-detection-ai-s2xftbqgz8mffnelg5xgsr.streamlit.app/
+ https://fraud-detection-ai-s2xftbqgz8mffnelg5xgsr.streamlit.app/
 
 ---
 
-## 📊 Overview
+## Overview
 
 Fraud detection is a highly imbalanced classification problem where missing fraudulent transactions can lead to significant financial loss.
 
@@ -20,17 +20,17 @@ This system prioritizes **recall over precision**, ensuring that the majority of
 
 ---
 
-## ⚙️ Features
+## Features
 
-- 🔍 Real-time fraud prediction
-- 🎯 Adjustable risk threshold
-- ⚖️ Optimized for imbalanced data
-- 🧠 Business-driven decision logic
-- 🌐 Interactive web interface (Streamlit)
+-  Real-time fraud prediction
+-  Adjustable risk threshold
+-  Optimized for imbalanced data
+-  Business-driven decision logic
+-  Interactive web interface (Streamlit)
 
 ---
 
-## 🤖 Model
+## Model
 
 - Algorithm: Random Forest Classifier
 - Class imbalance handled via class weighting
@@ -39,15 +39,15 @@ This system prioritizes **recall over precision**, ensuring that the majority of
 
 ---
 
-## 📈 Performance
+## Performance
 
-- 🔥 ROC AUC: ~0.98  
-- 📊 High recall for fraud detection  
-- ⚡ Stable performance on imbalanced dataset  
+-  ROC AUC: ~0.98  
+-  High recall for fraud detection  
+-  Stable performance on imbalanced dataset  
 
 ---
 
-## 💼 Business Impact
+## Business Impact
 
 This system can be applied in:
 
@@ -63,7 +63,7 @@ This system can be applied in:
 
 ---
 
-## 🧪 Run Locally
+## Run Locally
 
 ```bash
 pip install -r requirements.txt
@@ -72,7 +72,7 @@ streamlit run app.py
 
 ---
 
-👨‍💻 Author
+ Author
 
 Luis Enrique Camargo Rangel     
 Data Scientist | Machine Learning Engineer
