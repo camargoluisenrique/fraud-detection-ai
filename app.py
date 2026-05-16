@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
-from model import train_model, predict
+import matplotlib.pyplot as plt
+
+from src.model import load_model, load_sample, predict, get_metrics
 
 # =========================
 # CONFIG
@@ -8,67 +10,28 @@ from model import train_model, predict
 st.set_page_config(page_title="Fraud Detection System", layout="centered")
 
 # =========================
-# CUSTOM CSS
-# =========================
-st.markdown("""
-<style>
-
-html, body, [class*="css"]  {
-    font-family: 'Segoe UI', sans-serif;
-}
-
-section.main > div {
-    padding-top: 3rem;
-}
-
-.block-container {
-    padding-top: 3rem;
-    padding-bottom: 2rem;
-}
-
-h1, h2, h3 {
-    font-weight: 600;
-    letter-spacing: 0.3px;
-}
-
-.stButton>button {
-    border-radius: 8px;
-    background-color: #1f77b4;
-    color: white;
-    font-weight: 500;
-    padding: 0.6rem 1.2rem;
-}
-
-.stButton>button:hover {
-    background-color: #155a8a;
-}
-
-[data-testid="stMetricValue"] {
-    font-size: 28px;
-    font-weight: 600;
-}
-
-body {
-    overflow-x: hidden;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# =========================
 # LOAD MODEL
 # =========================
 @st.cache_resource
-def load_model():
-    model, X_test, scaler = train_model()
-    return model, X_test, scaler
+def load_model_cached():
+    return load_model()
 
-model, X_test, scaler = load_model()
+@st.cache_data
+def load_data():
+    return load_sample()
+
+model = load_model_cached()
+X_sample = load_data()
+
+#  DATA REAL PARA MÉTRICAS 
+df_full = pd.read_csv("data/fraud_sample.csv")
+y_eval = df_full["Class"]
+X_eval = df_full.drop("Class", axis=1)
 
 # =========================
 # HEADER
 # =========================
-st.markdown("## Fraud Detection System")
+st.title("Fraud Detection System")
 st.caption("Real-time transaction monitoring using machine learning")
 
 st.divider()
@@ -76,45 +39,33 @@ st.divider()
 # =========================
 # INPUT
 # =========================
-st.markdown("### Transaction Input")
+st.subheader("Transaction Input")
 
 col1, col2 = st.columns(2)
 
 with col1:
     amount = st.number_input(
-        "Transaction Amount ($)", 
-        min_value=0.0, 
-        max_value=50000.0, 
-        value=100.0,
-        key="amount_input"
+        "Transaction Amount ($)", 0.0, 50000.0, 100.0
     )
 
 with col2:
     time = st.slider(
-        "Time (seconds)", 
-        min_value=0, 
-        max_value=172800, 
-        value=10000,
-        key="time_slider"
+        "Time (seconds)", 0, 172800, 10000
     )
 
 # =========================
-# SETTINGS
+# THRESHOLD
 # =========================
-st.markdown("### Detection Settings")
+st.subheader("Detection Settings")
 
 threshold = st.slider(
-    "Fraud Threshold", 
-    min_value=0.0, 
-    max_value=1.0, 
-    value=0.5,
-    key="threshold_slider"
+    "Fraud Threshold", 0.0, 1.0, 0.5
 )
 
 # =========================
 # BASE SAMPLE
 # =========================
-sample = X_test.iloc[0].copy()
+sample = X_sample.iloc[0].copy()
 sample["Amount"] = amount
 sample["Time"] = time
 
@@ -123,53 +74,76 @@ sample["Time"] = time
 # =========================
 if st.button("Evaluate Transaction"):
 
-    input_data = sample.to_dict()
-    result = predict(model, input_data)
+    result = predict(model, sample.to_dict())
     prob = result["probability"]
 
     st.divider()
-
-    # =========================
-    # RESULT
-    # =========================
-    st.markdown("### Risk Assessment")
+    st.subheader("Risk Assessment")
 
     st.metric("Fraud Probability", f"{prob:.2%}")
     st.progress(prob)
 
     if prob > threshold:
-        st.markdown(
-            "<div style='padding:10px; border-radius:8px; background-color:#3a0f0f; color:#ff4b4b;'>"
-            "<b>High Risk Transaction</b>"
-            "</div>",
-            unsafe_allow_html=True
-        )
+        st.error("High Risk Transaction")
     else:
-        st.markdown(
-            "<div style='padding:10px; border-radius:8px; background-color:#0f2e1f; color:#00c853;'>"
-            "<b>Transaction Approved</b>"
-            "</div>",
-            unsafe_allow_html=True
-        )
+        st.success("Transaction Approved")
 
-    # =========================
-    # ANALYSIS
-    # =========================
-    st.markdown("### Analysis")
+    st.subheader("Analysis")
 
     if prob > threshold:
-        st.write("The transaction shows patterns consistent with fraudulent behavior.")
+        st.write("Patterns indicate potential fraudulent behavior.")
     else:
-        st.write("The transaction is consistent with normal behavior patterns.")
+        st.write("Transaction appears normal.")
 
-    # =========================
-    # MODEL INFO
-    # =========================
-    st.markdown("### Model Information")
+    st.subheader("Model Info")
 
     st.write("""
-This model is trained on highly imbalanced financial data.
+Model optimized for imbalanced classification.
 
-It prioritizes recall to ensure fraudulent transactions are detected,
-even at the cost of some false positives.
+Focus:
+- High recall
+- Fraud detection priority
+- Real-world risk scenarios
 """)
+
+# =========================
+#  MODEL EVALUATION (NIVEL PRO)
+# =========================
+st.divider()
+st.subheader("Model Evaluation")
+
+fpr, tpr, cm = get_metrics(model, X_eval, y_eval)
+
+# ROC Curve
+fig, ax = plt.subplots(facecolor="#0e1117")
+
+ax.plot(fpr, tpr, color="#1f77b4", linewidth=2)
+ax.plot([0,1], [0,1], linestyle="--", color="gray")
+
+ax.set_facecolor("#0e1117")
+ax.set_title("ROC Curve", color="white")
+ax.set_xlabel("False Positive Rate", color="white")
+ax.set_ylabel("True Positive Rate", color="white")
+
+ax.tick_params(colors="white")
+
+st.pyplot(fig)
+
+# Confusion Matrix
+fig2, ax2 = plt.subplots(facecolor="#0e1117")
+
+im = ax2.imshow(cm, cmap="Blues")
+
+ax2.set_title("Confusion Matrix", color="white")
+
+for i in range(len(cm)):
+    for j in range(len(cm[0])):
+        ax2.text(
+            j, i, cm[i, j],
+            ha="center", va="center",
+            color="white" if cm[i, j] > cm.max()/2 else "black"
+        )
+
+ax2.tick_params(colors="white")
+
+st.pyplot(fig2)
